@@ -5,7 +5,6 @@ import {
   deleteBookmark, 
   getBookmarkById 
 } from '@/lib/bookmarks';
-import { initDatabase } from '@/lib/database';
 
 // PUT - Update bookmark
 export async function PUT(
@@ -13,8 +12,6 @@ export async function PUT(
   { params }: { params: { id: string } }
 ) {
   try {
-    await initDatabase();
-    
     const token = request.cookies.get('token')?.value;
     if (!token) {
       return NextResponse.json(
@@ -31,7 +28,7 @@ export async function PUT(
       );
     }
     
-    const bookmarkId = parseInt(params.id);
+    const bookmarkId = params.id;
     const updates = await request.json();
     
     const bookmark = await updateBookmark(bookmarkId, decoded.userId, updates);
@@ -64,8 +61,6 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   try {
-    await initDatabase();
-    
     const token = request.cookies.get('token')?.value;
     if (!token) {
       return NextResponse.json(
@@ -82,7 +77,7 @@ export async function DELETE(
       );
     }
     
-    const bookmarkId = parseInt(params.id);
+    const bookmarkId = params.id;
     const success = await deleteBookmark(bookmarkId, decoded.userId);
     
     if (!success) {

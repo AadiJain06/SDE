@@ -23,7 +23,7 @@ A professional full-stack bookmark management application with AI-powered summar
 - **Frontend**: Next.js 14, React 18, TypeScript
 - **Styling**: Tailwind CSS with custom professional color palette
 - **Backend**: Next.js API routes
-- **Database**: SQLite with custom ORM
+- **Database**: Supabase (PostgreSQL)
 - **Authentication**: bcrypt + JWT
 - **AI Integration**: Jina AI API for content summarization
 - **Icons**: Lucide React
@@ -50,8 +50,17 @@ A professional full-stack bookmark management application with AI-powered summar
 3. **Set up environment variables**
    Create a `.env.local` file in the root directory:
    ```env
+   # Supabase Configuration
+   NEXT_PUBLIC_SUPABASE_URL=your-supabase-project-url
+   NEXT_PUBLIC_SUPABASE_ANON_KEY=your-supabase-anon-key
+   
+   # Authentication
    JWT_SECRET=your-super-secret-jwt-key-change-this-in-production
+   
+   # AI Integration
    JINA_API_KEY=your-jina-ai-api-key
+   
+   # Google OAuth (Optional)
    NEXT_PUBLIC_GOOGLE_CLIENT_ID=your-google-client-id
    GOOGLE_CLIENT_ID=your-google-client-id
    ```
@@ -67,8 +76,8 @@ A professional full-stack bookmark management application with AI-powered summar
    6. Copy the Client ID and add it to your `.env.local` file as `NEXT_PUBLIC_GOOGLE_CLIENT_ID`
    7. For production, add your production domain to the authorized origins
 
-4. **Initialize the database**
-   The database will be automatically created when you first run the application.
+4. **Set up Supabase database**
+   Follow the instructions in `MIGRATION_GUIDE.md` to set up your Supabase project and database schema.
 
 5. **Start the development server**
    ```bash
@@ -93,28 +102,34 @@ A professional full-stack bookmark management application with AI-powered summar
 
 ## Database Schema
 
+The database schema is defined in `supabase-schema.sql`. Key features:
+
+- **UUID-based IDs**: All tables use UUID primary keys for better scalability
+- **Row Level Security (RLS)**: Built-in security policies ensure data isolation
+- **Automatic timestamps**: Created_at fields are automatically managed
+- **Foreign key constraints**: Proper referential integrity between tables
+
 ### Users Table
 ```sql
 CREATE TABLE users (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   email TEXT UNIQUE NOT NULL,
   password TEXT NOT NULL,
-  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 ```
 
 ### Bookmarks Table
 ```sql
 CREATE TABLE bookmarks (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  user_id INTEGER NOT NULL,
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   url TEXT NOT NULL,
   title TEXT,
   favicon TEXT,
   summary TEXT,
   tags TEXT,
-  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (user_id) REFERENCES users (id)
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 ```
 
@@ -138,7 +153,7 @@ CREATE TABLE bookmarks (
 ├── lib/                   # Utility libraries
 │   ├── auth.ts           # Authentication utilities
 │   ├── bookmarks.ts      # Bookmark management
-│   ├── database.ts       # Database setup
+│   ├── supabase.ts       # Supabase client configuration
 │   └── summary.ts        # AI summary generation
 ├── public/               # Static assets
 └── package.json          # Dependencies and scripts
@@ -190,10 +205,11 @@ Make sure to set these in production:
 - `NODE_ENV`: Set to "production"
 
 ### Database
-The SQLite database file (`database.sqlite`) will be created automatically. For production, consider:
-- Regular backups
+The application now uses Supabase (PostgreSQL) for the database. For production, consider:
+- Regular backups (handled by Supabase)
 - Database optimization
-- Migration strategies
+- Row Level Security policies
+- Connection pooling
 
 ## Contributing
 

@@ -45,12 +45,7 @@ export const extractTitle = async (url: string): Promise<string> => {
 // Generate AI summary using Jina AI
 export const generateSummary = async (url: string, title: string): Promise<string> => {
   try {
-    const apiKey = process.env.JINA_API_KEY;
-    
-    if (!apiKey || apiKey === 'your-jina-ai-api-key') {
-      // Fallback summary when no API key is provided
-      return `Summary for: ${title}\n\nThis is a placeholder summary. To get AI-powered summaries, please configure your Jina AI API key in the environment variables.`;
-    }
+    const apiKey = 'jina_b03c6b67b96d4805857382d74d4f4995JJiMamY7lJiKp-BZGTBQXEWmVr8P';
     
     // Fetch the webpage content
     const response = await axios.get(url, {

@@ -11,6 +11,12 @@ interface Bookmark {
   favicon: string;
   summary: string;
   tags: string;
+  category_id?: string;
+  categories?: {
+    id: string;
+    name: string;
+    color: string;
+  };
   created_at: string;
 }
 
@@ -171,8 +177,19 @@ export default function BookmarkCard({ bookmark, onDelete, onUpdate }: BookmarkC
             />
           </div>
         ) : (
-          bookmark.tags && (
-            <div className="mb-4">
+          <div className="mb-4 space-y-2">
+            {bookmark.categories && (
+              <div className="flex items-center space-x-2">
+                <div 
+                  className="w-3 h-3 rounded-full" 
+                  style={{ backgroundColor: bookmark.categories.color }}
+                />
+                <span className="text-sm text-secondary-600 dark:text-secondary-400">
+                  {bookmark.categories.name}
+                </span>
+              </div>
+            )}
+            {bookmark.tags && (
               <div className="flex items-center space-x-2">
                 <Tag className="w-4 h-4 text-secondary-500" />
                 <div className="flex flex-wrap gap-1">
@@ -186,8 +203,8 @@ export default function BookmarkCard({ bookmark, onDelete, onUpdate }: BookmarkC
                   ))}
                 </div>
               </div>
-            </div>
-          )
+            )}
+          </div>
         )}
 
         <div className="flex items-center justify-between text-xs text-secondary-500 dark:text-secondary-400">

@@ -1,4 +1,4 @@
-// File: C:\Users\eykag\OneDrive\Desktop\database\app\api\bookmarks\route.ts
+// File: C:\Users\aadij\Downloads\SDE\database\app\api\bookmarks\route.ts
 import * as entry from '../../../../../app/api/bookmarks/route.js'
 import type { NextRequest } from 'next/server.js'
 

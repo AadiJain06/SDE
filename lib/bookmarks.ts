@@ -1,164 +1,136 @@
-import { getDatabase } from './database';
+import { supabase, Bookmark } from './supabase';
 
-export interface Bookmark {
-  id: number;
-  user_id: number;
+export interface BookmarkInput {
+  user_id: string;
   url: string;
   title: string;
   favicon: string;
   summary: string;
-  tags: string;
-  created_at: string;
+  tags?: string;
 }
 
 export const createBookmark = async (
-  userId: number,
+  userId: string,
   url: string,
   title: string,
   favicon: string,
   summary: string,
-  tags: string = ''
+  tags: string = '',
+  categoryId?: string
 ): Promise<Bookmark> => {
-  return new Promise((resolve, reject) => {
-    const db = getDatabase();
-    
-    db.run(
-      'INSERT INTO bookmarks (user_id, url, title, favicon, summary, tags) VALUES (?, ?, ?, ?, ?, ?)',
-      [userId, url, title, favicon, summary, tags],
-      function(err) {
-        if (err) {
-          reject(err);
-          return;
-        }
-        
-        db.get(
-          'SELECT * FROM bookmarks WHERE id = ?',
-          [this.lastID],
-          (err, row) => {
-            if (err) {
-              reject(err);
-              return;
-            }
-            resolve(row as Bookmark);
-          }
-        );
+  console.log('Creating bookmark with user ID:', userId);
+  const { data, error } = await supabase
+    .from('bookmarks')
+    .insert([
+      {
+        user_id: userId,
+        url,
+        title,
+        favicon,
+        summary,
+        tags,
+        category_id: categoryId
       }
-    );
-  });
+    ])
+    .select()
+    .single();
+
+  if (error) {
+    console.error('Error creating bookmark:', error);
+    throw new Error(error.message);
+  }
+
+  return data;
 };
 
-export const getBookmarksByUserId = async (userId: number): Promise<Bookmark[]> => {
-  return new Promise((resolve, reject) => {
-    const db = getDatabase();
-    
-    db.all(
-      'SELECT * FROM bookmarks WHERE user_id = ? ORDER BY created_at DESC',
-      [userId],
-      (err, rows) => {
-        if (err) {
-          reject(err);
-          return;
-        }
-        resolve(rows as Bookmark[]);
-      }
-    );
-  });
+export const getBookmarksByUserId = async (userId: string): Promise<Bookmark[]> => {
+  const { data, error } = await supabase
+    .from('bookmarks')
+    .select(`
+      *,
+      categories (
+        id,
+        name,
+        color
+      )
+    `)
+    .eq('user_id', userId)
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return data || [];
 };
 
-export const getBookmarkById = async (id: number, userId: number): Promise<Bookmark | null> => {
-  return new Promise((resolve, reject) => {
-    const db = getDatabase();
-    
-    db.get(
-      'SELECT * FROM bookmarks WHERE id = ? AND user_id = ?',
-      [id, userId],
-      (err, row) => {
-        if (err) {
-          reject(err);
-          return;
-        }
-        resolve(row as Bookmark | null);
-      }
-    );
-  });
+export const getBookmarkById = async (id: string, userId: string): Promise<Bookmark | null> => {
+  const { data, error } = await supabase
+    .from('bookmarks')
+    .select('*')
+    .eq('id', id)
+    .eq('user_id', userId)
+    .single();
+
+  if (error || !data) {
+    return null;
+  }
+
+  return data;
 };
 
 export const updateBookmark = async (
-  id: number,
-  userId: number,
-  updates: Partial<Pick<Bookmark, 'title' | 'summary' | 'tags'>>
+  id: string,
+  userId: string,
+  updates: Partial<Pick<Bookmark, 'title' | 'summary' | 'tags' | 'category_id'>>
 ): Promise<Bookmark | null> => {
-  return new Promise((resolve, reject) => {
-    const db = getDatabase();
-    
-    const setClause = Object.keys(updates)
-      .map(key => `${key} = ?`)
-      .join(', ');
-    
-    const values = [...Object.values(updates), id, userId];
-    
-    db.run(
-      `UPDATE bookmarks SET ${setClause} WHERE id = ? AND user_id = ?`,
-      values,
-      function(err) {
-        if (err) {
-          reject(err);
-          return;
-        }
-        
-        if (this.changes === 0) {
-          resolve(null);
-          return;
-        }
-        
-        db.get(
-          'SELECT * FROM bookmarks WHERE id = ?',
-          [id],
-          (err, row) => {
-            if (err) {
-              reject(err);
-              return;
-            }
-            resolve(row as Bookmark);
-          }
-        );
-      }
-    );
-  });
+  const { data, error } = await supabase
+    .from('bookmarks')
+    .update(updates)
+    .eq('id', id)
+    .eq('user_id', userId)
+    .select(`
+      *,
+      categories (
+        id,
+        name,
+        color
+      )
+    `)
+    .single();
+
+  if (error || !data) {
+    return null;
+  }
+
+  return data;
 };
 
-export const deleteBookmark = async (id: number, userId: number): Promise<boolean> => {
-  return new Promise((resolve, reject) => {
-    const db = getDatabase();
-    
-    db.run(
-      'DELETE FROM bookmarks WHERE id = ? AND user_id = ?',
-      [id, userId],
-      function(err) {
-        if (err) {
-          reject(err);
-          return;
-        }
-        resolve(this.changes > 0);
-      }
-    );
-  });
+export const deleteBookmark = async (id: string, userId: string): Promise<boolean> => {
+  const { error } = await supabase
+    .from('bookmarks')
+    .delete()
+    .eq('id', id)
+    .eq('user_id', userId);
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return true;
 };
 
-export const getBookmarksByTag = async (userId: number, tag: string): Promise<Bookmark[]> => {
-  return new Promise((resolve, reject) => {
-    const db = getDatabase();
-    
-    db.all(
-      'SELECT * FROM bookmarks WHERE user_id = ? AND tags LIKE ? ORDER BY created_at DESC',
-      [userId, `%${tag}%`],
-      (err, rows) => {
-        if (err) {
-          reject(err);
-          return;
-        }
-        resolve(rows as Bookmark[]);
-      }
-    );
-  });
+export const getBookmarksByTag = async (userId: string, tag: string): Promise<Bookmark[]> => {
+  const { data, error } = await supabase
+    .from('bookmarks')
+    .select('*')
+    .eq('user_id', userId)
+    .ilike('tags', `%${tag}%`)
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return data || [];
 }; 

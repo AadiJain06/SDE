@@ -7,6 +7,8 @@ import toast from 'react-hot-toast';
 import AddBookmarkForm from '@/components/AddBookmarkForm';
 import DraggableBookmarkList from '@/components/DraggableBookmarkList';
 import DarkModeToggle from '@/components/DarkModeToggle';
+import CategoryManager from '@/components/CategoryManager';
+import { Category } from '@/lib/supabase';
 
 interface Bookmark {
   id: number;
@@ -15,23 +17,32 @@ interface Bookmark {
   favicon: string;
   summary: string;
   tags: string;
+  category_id?: string;
+  categories?: {
+    id: string;
+    name: string;
+    color: string;
+  };
   created_at: string;
 }
 
 export default function DashboardPage() {
   const [bookmarks, setBookmarks] = useState<Bookmark[]>([]);
   const [filteredBookmarks, setFilteredBookmarks] = useState<Bookmark[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedTag, setSelectedTag] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
 
   useEffect(() => {
     fetchBookmarks();
+    fetchCategories();
   }, []);
 
   useEffect(() => {
-    // Filter bookmarks based on search term and selected tag
+    // Filter bookmarks based on search term, selected tag, and selected category
     let filtered = bookmarks;
 
     if (searchTerm) {
@@ -49,8 +60,14 @@ export default function DashboardPage() {
       );
     }
 
+    if (selectedCategory) {
+      filtered = filtered.filter(bookmark =>
+        bookmark.category_id === selectedCategory
+      );
+    }
+
     setFilteredBookmarks(filtered);
-  }, [bookmarks, searchTerm, selectedTag]);
+  }, [bookmarks, searchTerm, selectedTag, selectedCategory]);
 
   const fetchBookmarks = async () => {
     try {
@@ -67,6 +84,18 @@ export default function DashboardPage() {
       toast.error('An error occurred while fetching bookmarks');
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const fetchCategories = async () => {
+    try {
+      const response = await fetch('/api/categories');
+      if (response.ok) {
+        const data = await response.json();
+        setCategories(data.categories);
+      }
+    } catch (error) {
+      console.error('Error fetching categories:', error);
     }
   };
 
@@ -150,35 +179,41 @@ export default function DashboardPage() {
         {/* Add Bookmark Form */}
         <AddBookmarkForm onBookmarkAdded={fetchBookmarks} />
 
+        {/* Category Management */}
+        <CategoryManager 
+          onCategorySelect={setSelectedCategory}
+          selectedCategoryId={selectedCategory}
+        />
+
         {/* Search and Filter */}
-        <div className="bg-white dark:bg-secondary-800 rounded-lg shadow-md p-6 mb-6">
-          <div className="grid md:grid-cols-2 gap-4">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 mb-6">
+          <div className="grid md:grid-cols-2 gap-4 mb-4">
             <div>
-              <label className="block text-sm font-medium text-secondary-700 dark:text-secondary-300 mb-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Search Bookmarks
               </label>
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-secondary-400 w-5 h-5" />
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
                 <input
                   type="text"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   placeholder="Search by title, URL, or summary..."
-                  className="w-full pl-10 pr-4 py-3 border border-secondary-300 dark:border-secondary-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-secondary-700 dark:text-white"
+                  className="w-full pl-10 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-secondary-700 dark:text-secondary-300 mb-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Filter by Tag
               </label>
               <div className="relative">
-                <Filter className="absolute left-3 top-1/2 transform -translate-y-1/2 text-secondary-400 w-5 h-5" />
+                <Filter className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
                 <select
                   value={selectedTag}
                   onChange={(e) => setSelectedTag(e.target.value)}
-                  className="w-full pl-10 pr-4 py-3 border border-secondary-300 dark:border-secondary-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-secondary-700 dark:text-white"
+                  className="w-full pl-10 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                 >
                   <option value="">All tags</option>
                   {getAllTags().map(tag => (
@@ -188,6 +223,38 @@ export default function DashboardPage() {
               </div>
             </div>
           </div>
+
+          {/* Active Filters */}
+          {(searchTerm || selectedTag || selectedCategory) && (
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="text-sm text-gray-600 dark:text-gray-400">Active filters:</span>
+              {searchTerm && (
+                <span className="px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 text-xs rounded-full">
+                  Search: "{searchTerm}"
+                </span>
+              )}
+              {selectedTag && (
+                <span className="px-2 py-1 bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 text-xs rounded-full">
+                  Tag: {selectedTag}
+                </span>
+              )}
+              {selectedCategory && (
+                <span className="px-2 py-1 bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200 text-xs rounded-full">
+                  Category: {selectedCategory}
+                </span>
+              )}
+              <button
+                onClick={() => {
+                  setSearchTerm('');
+                  setSelectedTag('');
+                  setSelectedCategory('');
+                }}
+                className="text-xs text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
+              >
+                Clear all
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Bookmarks Grid */}

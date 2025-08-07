@@ -1,11 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getUserByEmail, comparePassword, generateToken } from '@/lib/auth';
-import { initDatabase } from '@/lib/database';
 
 export async function POST(request: NextRequest) {
   try {
-    await initDatabase();
-    
     const { email, password } = await request.json();
 
     // Validation

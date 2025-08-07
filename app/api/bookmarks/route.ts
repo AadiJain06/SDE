@@ -6,13 +6,10 @@ import {
   getBookmarksByTag 
 } from '@/lib/bookmarks';
 import { generateSummary, extractFavicon, extractTitle } from '@/lib/summary';
-import { initDatabase } from '@/lib/database';
 
 // GET - Fetch bookmarks
 export async function GET(request: NextRequest) {
   try {
-    await initDatabase();
-    
     const token = request.cookies.get('token')?.value;
     if (!token) {
       return NextResponse.json(
@@ -52,8 +49,6 @@ export async function GET(request: NextRequest) {
 // POST - Create new bookmark
 export async function POST(request: NextRequest) {
   try {
-    await initDatabase();
-    
     const token = request.cookies.get('token')?.value;
     if (!token) {
       return NextResponse.json(
@@ -70,7 +65,9 @@ export async function POST(request: NextRequest) {
       );
     }
     
-    const { url, tags = '' } = await request.json();
+    console.log('Bookmark API - User ID from token:', decoded.userId);
+    
+    const { url, tags = '', categoryId } = await request.json();
     
     if (!url) {
       return NextResponse.json(
@@ -93,7 +90,8 @@ export async function POST(request: NextRequest) {
       title,
       favicon,
       summary,
-      tags
+      tags,
+      categoryId
     );
     
     return NextResponse.json(
