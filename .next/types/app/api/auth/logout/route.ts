@@ -1,4 +1,4 @@
-// File: C:\Users\eykag\OneDrive\Desktop\database\app\api\auth\logout\route.ts
+// File: C:\Users\aadij\Downloads\SDE\database\app\api\auth\logout\route.ts
 import * as entry from '../../../../../../app/api/auth/logout/route.js'
 import type { NextRequest } from 'next/server.js'
 

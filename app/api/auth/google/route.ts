@@ -1,10 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { handleGoogleAuth } from '@/lib/googleAuth';
-import { initDatabase } from '@/lib/database';
 
 export async function POST(request: NextRequest) {
   try {
-    await initDatabase();
     
     const { idToken } = await request.json();
 

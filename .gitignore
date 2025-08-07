@@ -4,10 +4,11 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
-# Production
+# Next.js
 .next/
 out/
 build/
+dist/
 
 # Environment variables
 .env
@@ -16,13 +17,17 @@ build/
 .env.test.local
 .env.production.local
 
-# Database
-database.sqlite
-*.db
+# Vercel
+.vercel
+
+# TypeScript
+*.tsbuildinfo
 
 # IDE
 .vscode/
 .idea/
+*.swp
+*.swo
 
 # OS
 .DS_Store
@@ -40,12 +45,25 @@ pids
 
 # Coverage directory used by tools like istanbul
 coverage/
+*.lcov
+
+# nyc test coverage
+.nyc_output
 
 # Dependency directories
 jspm_packages/
 
 # Optional npm cache directory
 .npm
+
+# Optional eslint cache
+.eslintcache
+
+# Microbundle cache
+.rpt2_cache/
+.rts2_cache_cjs/
+.rts2_cache_es/
+.rts2_cache_umd/
 
 # Optional REPL history
 .node_repl_history
@@ -55,3 +73,32 @@ jspm_packages/
 
 # Yarn Integrity file
 .yarn-integrity
+
+# parcel-bundler cache (https://parceljs.org/)
+.cache
+.parcel-cache
+
+# Next.js build output
+.next
+
+# Nuxt.js build / generate output
+.nuxt
+dist
+
+# Storybook build outputs
+.out
+.storybook-out
+
+# Temporary folders
+tmp/
+temp/
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# Test files
+test-results/
+playwright-report/
+test-results.xml
