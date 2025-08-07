@@ -1,7 +1,10 @@
 import sqlite3 from 'sqlite3';
 import path from 'path';
 
-const dbPath = path.join(process.cwd(), 'database.sqlite');
+// Use /tmp directory for Render deployment or current directory for local development
+const dbPath = process.env.NODE_ENV === 'production' 
+  ? '/tmp/database.sqlite' 
+  : path.join(process.cwd(), 'database.sqlite');
 
 export const initDatabase = () => {
   return new Promise<sqlite3.Database>((resolve, reject) => {
